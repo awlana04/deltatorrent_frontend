@@ -1,0 +1,12 @@
+.list-button-container {
+    -fx-background-color: transparent;
+    -fx-font-weight: bold;
+    -fx-padding: 10px 24px;
+    -fx-text-fill: #000000;
+    -fx-background-radius: 12px;
+    -fx-cursor: hand;
+}
+
+.list-button-container:hover {
+    -fx-background-color: #E5E5E5;
+}
