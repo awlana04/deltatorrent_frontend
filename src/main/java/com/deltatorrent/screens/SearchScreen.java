@@ -44,7 +44,7 @@ public class SearchScreen extends VBox {
         );
 
         Label subtitle = new Label(
-            "Pesquise torrents e encontre arquivos."
+            "Search torrents and find files."
         );
         subtitle.setStyle("-fx-text-fill: #999999;");
 

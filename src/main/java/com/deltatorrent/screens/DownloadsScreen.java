@@ -222,11 +222,20 @@ public class DownloadsScreen extends VBox {
         // Uses a label to store and display the state.
         Label stateLabel = new Label(initialState);
 
+        // Updates the buttons according to the download state.
+        Runnable updateButtons = () -> {
+        String state = stateLabel.getText();
+
+        pauseButton.setDisable(!state.equals("Downloading"));
+        resumeButton.setDisable(!state.equals("Paused"));
+        };
+        updateButtons.run();
+
         // Pause button action.
         pauseButton.setOnAction(event -> {
 
             // Does not allow pausing a completed download.
-            if (stateLabel.getText().equals("Completed")) {
+           if (!stateLabel.getText().equals("Downloading")) {
                 return;
             }
 
@@ -235,14 +244,16 @@ public class DownloadsScreen extends VBox {
 
             // Informs that the download is paused.
             speedLabel.setText("Paused");
+
+            // Updates the buttons according to the new state.
+            updateButtons.run();
         });
 
         // Resume button action.
         resumeButton.setOnAction(event -> {
 
-            // A completed download does not need to be resumed.
-            if (stateLabel.getText().equals("Completed")) {
-                return;
+            if (!stateLabel.getText().equals("Paused")) {
+            return;
             }
 
             // Updates the visual state to downloading.
@@ -250,6 +261,9 @@ public class DownloadsScreen extends VBox {
 
             // Uses a dummy speed for the test.
             speedLabel.setText("2.5 MB/s");
+
+            // Updates the buttons according to the new state.
+            updateButtons.run();
         });
 
         // Remove button action.
