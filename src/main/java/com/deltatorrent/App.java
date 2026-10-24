@@ -20,7 +20,8 @@ public class App {
     this.container.getStyleClass().add("app-container");
 
     DownloadsScreen downloadsScreen = new DownloadsScreen();
-    SearchScreen searchScreen = new SearchScreen();
+    // A Search poderá adicionar arquivos à mesma lista de Downloads.
+    SearchScreen searchScreen = new SearchScreen(downloadsScreen);
 
     List<ScreensModel> pages = new ArrayList<>();
 
