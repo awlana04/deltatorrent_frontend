@@ -1,0 +1,20 @@
+/* Search screen title. */
+.search-screen-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+}
+
+/* Search screen subtitle. */
+.search-screen-subtitle {
+    -fx-text-fill: #999999;
+}
+
+/* Message displayed when no search results are found. */
+.search-empty-message {
+    -fx-text-fill: #999999;
+}
+
+/* File name displayed in a search result. */
+.search-result-name {
+    -fx-font-weight: bold;
+}

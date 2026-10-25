@@ -1,4 +1,3 @@
-
 package com.deltatorrent.screens;
 
 // UI components.
@@ -16,7 +15,7 @@ import javafx.scene.layout.VBox;
 // Class responsible for the Search tab.
 public class SearchScreen extends VBox {
 
-   // Container that organizes the screen elements.
+    // Container that organizes the screen elements.
     private final VBox container;
 
     // Reference to the Downloads screen created by App.
@@ -27,7 +26,7 @@ public class SearchScreen extends VBox {
 
         this.downloadsScreen = downloadsScreen;
 
-       // Creates the container and sets its internal spacing.
+        // Creates the container and sets its internal spacing.
         this.container = new VBox(20);
         this.container.setPadding(new Insets(30));
         this.container.setFillWidth(true);
@@ -35,19 +34,15 @@ public class SearchScreen extends VBox {
         // ==================== HEADER ====================
 
         Label title = new Label("Search");
-        title.setStyle(
-            "-fx-font-size: 26px;" +
-            "-fx-font-weight: bold;"
-        );
-        // Applies theme-aware colors to the screen title.
-        title.getStyleClass().add("screen-title");
+        // Applies the CSS class responsible for the title's appearance.
+        title.getStyleClass().add("search-screen-title");
 
         Label subtitle = new Label(
             "Search torrents and find files."
         );
         
         // Uses a theme-aware style for the subtitle.
-        subtitle.getStyleClass().add("screen-subtitle");
+        subtitle.getStyleClass().add("search-screen-subtitle");
 
         VBox header = new VBox(6, title, subtitle);
 
@@ -88,55 +83,59 @@ public class SearchScreen extends VBox {
 
         // Displays a message when the search returns no results.
         Label emptyMessage = new Label("No results found.");
-        emptyMessage.setStyle("-fx-text-fill: #999999;");
+        // Applies the CSS class for the empty-results message.
+        emptyMessage.getStyleClass().add("search-empty-message");
         emptyMessage.setVisible(false);
         emptyMessage.setManaged(false);
 
         // Performs the search when the button is clicked.
         searchButton.setOnAction(event -> {
 
-        String pesquisa = searchField.getText()
-        .toLowerCase()
-        .trim();
+            String pesquisa = searchField.getText()
+                .toLowerCase()
+                .trim();
 
-        // Clears the previous results and hides the empty-state message.
-        resultsList.getChildren().clear();
-        emptyMessage.setVisible(false);
-        emptyMessage.setManaged(false);
+            // Clears the previous results and hides the empty-state message.
+            resultsList.getChildren().clear();
+            emptyMessage.setVisible(false);
+            emptyMessage.setManaged(false);
 
-        // Does not search if the field is empty.
-        if (pesquisa.isEmpty()) {
-            return;
-}
-
-         // Mock files available for demonstration.
-          String[][] arquivos = {
-          {"Ubuntu.iso", "4,7 GB", "120"},
-          {"JavaFX Tutorial.mp4", "850 MB", "45"},
-          {"Linux Guide.pdf", "25 MB", "18"}
-        };
-
-        // Tracks whether any file matches the search.
-        boolean encontrouResultado = false;
-
-        // Adds only matching files.
-        for (String[] arquivo : arquivos) {
-              if (arquivo[0].toLowerCase().contains(pesquisa)) {
-                  encontrouResultado = true;  
-
-                resultsList.getChildren().add(
-                    createResult(
-                    arquivo[0],
-                    arquivo[1],
-                    arquivo[2]
-        ));}}
-        // Shows a message if no files matched the search.
-        if (!encontrouResultado) {
-            emptyMessage.setManaged(true);
-            emptyMessage.setVisible(true);
+            // Does not search if the field is empty.
+            if (pesquisa.isEmpty()) {
+                return;
             }
 
-    });
+            // Mock files available for demonstration.
+            String[][] arquivos = {
+                {"Ubuntu.iso", "4,7 GB", "120"},
+                {"JavaFX Tutorial.mp4", "850 MB", "45"},
+                {"Linux Guide.pdf", "25 MB", "18"}
+            };
+
+            // Tracks whether any file matches the search.
+            boolean encontrouResultado = false;
+
+            // Adds only matching files.
+            for (String[] arquivo : arquivos) {
+                if (arquivo[0].toLowerCase().contains(pesquisa)) {
+                    encontrouResultado = true;  
+
+                    resultsList.getChildren().add(
+                        createResult(
+                            arquivo[0],
+                            arquivo[1],
+                            arquivo[2]
+                        )
+                    );
+                }
+            }
+
+            // Shows a message if no files matched the search.
+            if (!encontrouResultado) {
+                emptyMessage.setManaged(true);
+                emptyMessage.setVisible(true);
+            }
+        });
 
         // Also allows searching by pressing Enter.
         searchField.setOnAction(event -> searchButton.fire());
@@ -152,14 +151,14 @@ public class SearchScreen extends VBox {
 
         // Allows the results area to expand into the available vertical space.
         VBox.setVgrow(resultsScroll, Priority.ALWAYS);
-     }
+    }
 
-        // Creates a card for each search result.
-        private HBox createResult(
-            String nome,
-            String tamanho,
-            String seeds
-        ) {
+    // Creates a card for each search result.
+    private HBox createResult(
+        String nome,
+        String tamanho,
+        String seeds
+    ) {
 
         HBox card = new HBox(12);
         card.setPadding(new Insets(16));
@@ -173,7 +172,8 @@ public class SearchScreen extends VBox {
 
         // Displays the file name.
         Label nameLabel = new Label(nome);
-        nameLabel.setStyle("-fx-font-weight: bold;");
+        // Applies the CSS class for the result's file name.
+        nameLabel.getStyleClass().add("search-result-name");
 
         // Displays mock result information.
         Label infoLabel = new Label(
