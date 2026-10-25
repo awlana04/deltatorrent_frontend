@@ -3,21 +3,19 @@ package com.deltatorrent.screens;
 // Imports tools to define spacing and alignments.
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-
+// Imports components used to confirm download removal.
+import javafx.scene.control.Alert;
 // Imports visual components.
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextField;
 import javafx.scene.control.ScrollPane;
-
+import javafx.scene.control.TextField;
 // Imports layouts to organize the interface.
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-// Imports components used to confirm download removal.
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 
 // Class responsible for the Downloads tab interface.
 public class DownloadsScreen extends VBox {
@@ -73,6 +71,9 @@ public class DownloadsScreen extends VBox {
         // Initializes the list that will be shared by methods of this screen.
         downloadsList = new VBox(12);
 
+        // Allows the downloads list background to follow the selected theme.
+        downloadsList.getStyleClass().add("downloads-list");
+
         // Adds dummy cards to test functionalities.
         this.downloadsList.getChildren().addAll(
             createDownloadItem(
@@ -124,6 +125,9 @@ public class DownloadsScreen extends VBox {
         // Creates a scrollable area for the downloads list.
         ScrollPane scrollPane = new ScrollPane(this.downloadsList);
 
+        // Allows the scroll area and its viewport to follow the selected theme.
+        scrollPane.getStyleClass().add("downloads-scroll");
+
         // Allows vertical scrolling and takes up available width.
         scrollPane.setFitToWidth(true);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -150,11 +154,8 @@ public class DownloadsScreen extends VBox {
         VBox card = new VBox(10);
         card.setPadding(new Insets(16));
 
-        // Sets the current appearance of the card.
-        card.setStyle(
-            "-fx-background-color: #252525;" +
-            "-fx-background-radius: 10;"
-        );
+        // Applies the CSS class so the card follows the selected theme.
+        card.getStyleClass().add("download-card");
 
         // Stores the name to allow searching.
         card.setUserData(name);

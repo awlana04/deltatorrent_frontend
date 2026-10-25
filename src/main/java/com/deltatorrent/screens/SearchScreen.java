@@ -6,15 +6,12 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-
 // Layouts used to organize the components.
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-
-// Downloads screen that will receive the added files.
-import com.deltatorrent.screens.DownloadsScreen;
 
 // Class responsible for the Search tab.
 public class SearchScreen extends VBox {
@@ -42,11 +39,15 @@ public class SearchScreen extends VBox {
             "-fx-font-size: 26px;" +
             "-fx-font-weight: bold;"
         );
+        // Applies theme-aware colors to the screen title.
+        title.getStyleClass().add("screen-title");
 
         Label subtitle = new Label(
             "Search torrents and find files."
         );
-        subtitle.setStyle("-fx-text-fill: #999999;");
+        
+        // Uses a theme-aware style for the subtitle.
+        subtitle.getStyleClass().add("screen-subtitle");
 
         VBox header = new VBox(6, title, subtitle);
 
@@ -67,8 +68,29 @@ public class SearchScreen extends VBox {
 
         VBox resultsList = new VBox(12);
 
+        // Creates a scrollable area for search results.
+        ScrollPane resultsScroll = new ScrollPane(resultsList);
+
+        // Allows the scroll area to follow the selected theme.
+        resultsScroll.getStyleClass().add("search-results-scroll");
+
+        // Allows the results to use the full available width.
+        resultsScroll.setFitToWidth(true);
+
+        // Displays the vertical scrollbar only when needed.
+        resultsScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        // Hides the horizontal scrollbar.
+        resultsScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
         // The list starts empty.
         // Results will be created after clicking Search.
+
+        // Displays a message when the search returns no results.
+        Label emptyMessage = new Label("No results found.");
+        emptyMessage.setStyle("-fx-text-fill: #999999;");
+        emptyMessage.setVisible(false);
+        emptyMessage.setManaged(false);
 
         // Performs the search when the button is clicked.
         searchButton.setOnAction(event -> {
@@ -77,13 +99,15 @@ public class SearchScreen extends VBox {
         .toLowerCase()
         .trim();
 
-        // Clears the previous search results.
+        // Clears the previous results and hides the empty-state message.
         resultsList.getChildren().clear();
+        emptyMessage.setVisible(false);
+        emptyMessage.setManaged(false);
 
         // Does not search if the field is empty.
         if (pesquisa.isEmpty()) {
-        return;
-        }
+            return;
+}
 
          // Mock files available for demonstration.
           String[][] arquivos = {
@@ -92,47 +116,57 @@ public class SearchScreen extends VBox {
           {"Linux Guide.pdf", "25 MB", "18"}
         };
 
+        // Tracks whether any file matches the search.
+        boolean encontrouResultado = false;
+
         // Adds only matching files.
         for (String[] arquivo : arquivos) {
               if (arquivo[0].toLowerCase().contains(pesquisa)) {
-                  resultsList.getChildren().add(
+                  encontrouResultado = true;  
+
+                resultsList.getChildren().add(
                     createResult(
                     arquivo[0],
                     arquivo[1],
                     arquivo[2]
-                )
-            );
-        }
-    }
+        ));}}
+        // Shows a message if no files matched the search.
+        if (!encontrouResultado) {
+            emptyMessage.setManaged(true);
+            emptyMessage.setVisible(true);
+            }
+
     });
 
         // Also allows searching by pressing Enter.
         searchField.setOnAction(event -> searchButton.fire());
 
         // ==================== SCREEN LAYOUT ====================
-
+        // Adds the header, search bar, scrollable results, and empty message.
         this.container.getChildren().addAll(
             header,
             searchBar,
-            resultsList
+            resultsScroll,
+            emptyMessage
         );
-    }
 
-    // Creates a card for each search result.
-    private HBox createResult(
-        String nome,
-        String tamanho,
-        String seeds
-    ) {
+        // Allows the results area to expand into the available vertical space.
+        VBox.setVgrow(resultsScroll, Priority.ALWAYS);
+     }
+
+        // Creates a card for each search result.
+        private HBox createResult(
+            String nome,
+            String tamanho,
+            String seeds
+        ) {
 
         HBox card = new HBox(12);
         card.setPadding(new Insets(16));
         card.setAlignment(Pos.CENTER_LEFT);
 
-        card.setStyle(
-            "-fx-background-color: #252525;" +
-            "-fx-background-radius: 10;"
-        );
+        // Applies a CSS class so the card can adapt to the selected theme.
+        card.getStyleClass().add("search-result-card");
 
         // Stores the file name to support filtering.
         card.setUserData(nome);

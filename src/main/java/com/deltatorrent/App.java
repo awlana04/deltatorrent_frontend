@@ -1,18 +1,15 @@
 package com.deltatorrent;
 
-import java.util.List;
 import java.util.ArrayList;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
-
-
-import com.deltatorrent.models.ScreensModel;
+import java.util.List;
 
 import com.deltatorrent.components.molecules.Sidebar;
-
+import com.deltatorrent.models.ScreensModel;
 import com.deltatorrent.screens.DownloadsScreen;
 import com.deltatorrent.screens.SearchScreen;
 import com.deltatorrent.screens.SettingsScreen;
+
+import javafx.scene.layout.BorderPane;
 
 public class App {
   private final BorderPane container;
@@ -21,11 +18,15 @@ public class App {
     this.container = new BorderPane();
     this.container.getStyleClass().add("app-container");
 
+    // Applies the default dark theme to the entire application.
+    this.container.getStyleClass().add("theme-light");
+
     DownloadsScreen downloadsScreen = new DownloadsScreen();
     // A Search poderá adicionar arquivos à mesma lista de Downloads.
     SearchScreen searchScreen = new SearchScreen(downloadsScreen);
-    // Creates the Settings screen.
-    SettingsScreen settingsScreen = new SettingsScreen();
+    
+    // Passes the main container so Settings can change the application theme.
+    SettingsScreen settingsScreen = new SettingsScreen(this.container);
 
     List<ScreensModel> pages = new ArrayList<>();
 

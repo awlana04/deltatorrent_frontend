@@ -1,4 +1,3 @@
-
 /* Default application container. */
 .app-container {
     -fx-background-color: #E5E5E5;
@@ -15,6 +14,7 @@
     -fx-background-color: #E5E5E5;
     -fx-text-fill: #202020;
 }
+
 /* Download cards in the light theme. */
 .theme-light .download-card {
     -fx-background-color: #FFFFFF;
@@ -30,6 +30,7 @@
     -fx-border-color: #404040;
     -fx-border-radius: 10px;
 }
+
 /* Scrollable downloads area in the light theme. */
 .theme-light .downloads-scroll,
 .theme-light .downloads-scroll > .viewport {
@@ -42,7 +43,9 @@
 .theme-dark .downloads-scroll > .viewport {
     -fx-background: #1E1E1E;
     -fx-background-color: #1E1E1E;
-}/* Downloads background in the light theme. */
+}
+
+/* Downloads background in the light theme. */
 .theme-light .downloads-screen,
 .theme-light .downloads-list,
 .theme-light .downloads-scroll,
@@ -57,6 +60,7 @@
 .theme-dark .downloads-scroll .viewport {
     -fx-background-color: #1E1E1E;
 }
+
 /* Secondary text in the light theme. */
 .theme-light .screen-subtitle {
     -fx-text-fill: #666666;
@@ -65,7 +69,9 @@
 /* Secondary text in the dark theme. */
 .theme-dark .screen-subtitle {
     -fx-text-fill: #B3B3B3;
-}/* Main screen titles in the light theme. */
+}
+
+/* Main screen titles in the light theme. */
 .theme-light .screen-title {
     -fx-text-fill: #202020;
 }
@@ -91,4 +97,45 @@
 
 .theme-dark .list-button-container:hover {
     -fx-background-color: #383838;
+}
+/* Search result cards in the light theme. */
+.theme-light .search-result-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 10px;
+}
+
+/* Search result cards in the dark theme. */
+.theme-dark .search-result-card {
+    -fx-background-color: #252525;
+    -fx-background-radius: 10px;
+    -fx-text-fill: #F5F5F5;
+}
+
+/* Makes search result text readable in the dark theme. */
+.theme-dark .search-result-card .label {
+    -fx-text-fill: #f5f5f5;
+}
+
+/* Makes the Search scroll area transparent in the light theme. */
+.theme-light .search-results-scroll,
+.theme-light .search-results-scroll > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+/* Makes the Search scroll area transparent in the dark theme. */
+.theme-dark .search-results-scroll,
+.theme-dark .search-results-scroll > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+/* Light theme: makes the text inside Search cards black. */
+.theme-light .search-result-card .label {
+    -fx-text-fill: #202020;
+}
+
+/* Dark theme: makes the text inside Search cards light, like Downloads. */
+.theme-dark .search-result-card .label {
+    -fx-text-fill: #F5F5F5;
 }
