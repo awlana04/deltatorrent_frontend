@@ -15,6 +15,9 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+// Imports components used to confirm download removal.
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 
 // Class responsible for the Downloads tab interface.
 public class DownloadsScreen extends VBox {
@@ -266,16 +269,41 @@ public class DownloadsScreen extends VBox {
             updateButtons.run();
         });
 
-        // Remove button action.
-        removeButton.setOnAction(event -> {
+            // Remove button action.
+             removeButton.setOnAction(event -> {
 
-            // Finds the container that holds this card.
+            // Creates a confirmation dialog before removing the download.
+            Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+
+            // Defines the dialog title and message.
+            confirmation.setTitle("Remove Download");
+            confirmation.setHeaderText("Remove this download?");
+             confirmation.setContentText(
+            "Are you sure you want to remove this download from the list?"
+            );
+
+            // Defines the confirmation and cancellation options.
+            ButtonType removeOption = new ButtonType("Remove");
+            ButtonType cancelOption = new ButtonType("Cancel");
+
+           confirmation.getButtonTypes().setAll(removeOption, cancelOption);
+
+            // Displays the dialog and waits for the user's choice.
+            confirmation.showAndWait().ifPresent(response -> {
+
+            // Removes the card only when the user confirms.
+            if (response == removeOption) {
+
+                // Finds the container that holds this card.
             if (card.getParent() instanceof VBox list) {
 
                 // Removes the card from the list.
                 list.getChildren().remove(card);
             }
-        });
+        }
+    });
+});
+
 
         // Groups the buttons horizontally.
         HBox buttons = new HBox(

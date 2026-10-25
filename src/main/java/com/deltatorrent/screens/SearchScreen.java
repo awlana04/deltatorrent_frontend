@@ -104,7 +104,7 @@ public class SearchScreen extends VBox {
             );
         }
     }
-});
+    });
 
         // Also allows searching by pressing Enter.
         searchField.setOnAction(event -> searchButton.fire());
