@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
+
 import com.deltatorrent.models.ScreensModel;
 
 import com.deltatorrent.components.molecules.Sidebar;
 
 import com.deltatorrent.screens.DownloadsScreen;
 import com.deltatorrent.screens.SearchScreen;
+import com.deltatorrent.screens.SettingsScreen;
 
 public class App {
   private final BorderPane container;
@@ -22,12 +24,16 @@ public class App {
     DownloadsScreen downloadsScreen = new DownloadsScreen();
     // A Search poderá adicionar arquivos à mesma lista de Downloads.
     SearchScreen searchScreen = new SearchScreen(downloadsScreen);
+    // Creates the Settings screen.
+    SettingsScreen settingsScreen = new SettingsScreen();
 
     List<ScreensModel> pages = new ArrayList<>();
 
     // Adds all the pages that we have to the array
     pages.add(new ScreensModel("search", "Search", searchScreen.getControl()));
     pages.add(new ScreensModel("download", "Downloads", downloadsScreen.getControl()));
+    // Adds the Settings page to the sidebar.
+    pages.add(new ScreensModel("settings", "Settings", settingsScreen.getControl()));
 
     Sidebar sidebar = new Sidebar(pages);
 
