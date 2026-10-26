@@ -43,17 +43,16 @@ public class DownloadsScreen extends VBox {
         // Creates the page title.
         Label title = new Label("Downloads");
 
-        title.setStyle(
-            "-fx-font-size: 26px;" +
-            "-fx-font-weight: bold;"
-        );
+        // Applies the CSS class responsible for the appearance of the title.
+        title.getStyleClass().add("downloads-screen-title");
 
         // Creates the auxiliary text.
         Label subtitle = new Label(
             "Manage your downloads in one place."
         );
 
-        subtitle.setStyle("-fx-text-fill: #999999;");
+        //Applies the CSS class responsible for the subtitle color.
+        subtitle.getStyleClass().add("downloads-screen-subtitle");
 
         // Groups the title and subtitle.
         VBox header = new VBox(6, title, subtitle);
@@ -163,7 +162,8 @@ public class DownloadsScreen extends VBox {
         // ==================== NAME AND SPEED ====================
 
         Label nameLabel = new Label(name);
-        nameLabel.setStyle("-fx-font-weight: bold;");
+        // Applies the CSS class responsible for highlighting the download name.
+        nameLabel.getStyleClass().add("download-name");
 
         Label speedLabel = new Label(speed);
 
