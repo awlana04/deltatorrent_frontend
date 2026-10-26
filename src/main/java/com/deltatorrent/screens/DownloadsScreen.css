@@ -1,0 +1,15 @@
+/* Downloads screen title. */
+.downloads-screen-title {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+}
+
+/* Downloads screen subtitle. */
+.downloads-screen-subtitle {
+    -fx-text-fill: #999999;
+}
+
+/* Name displayed in each download card. */
+.download-name {
+    -fx-font-weight: bold;
+}

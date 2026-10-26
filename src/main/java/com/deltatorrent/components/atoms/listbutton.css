@@ -1,12 +1,21 @@
+
+/* Base style for sidebar buttons. */
 .list-button-container {
     -fx-background-color: transparent;
     -fx-font-weight: bold;
     -fx-padding: 10px 24px;
-    -fx-text-fill: #000000;
     -fx-background-radius: 12px;
     -fx-cursor: hand;
+    -fx-alignment: CENTER_LEFT;
+    -fx-max-width: infinity;
 }
 
-.list-button-container:hover {
-    -fx-background-color: #E5E5E5;
+/* Hover effect for sidebar buttons in the light theme. */
+.theme-light .list-button-container:hover {
+    -fx-background-color: #D6D6D6;
+}
+
+/* Hover effect for sidebar buttons in the dark theme. */
+.theme-dark .list-button-container:hover {
+    -fx-background-color: #383838;
 }
