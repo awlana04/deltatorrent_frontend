@@ -23,3 +23,5 @@ target/
 # Arquivos temporários do Sistema Operacional (Linux/Mac/Windows)
 .DS_Store
 Thumbs.db
+
+my_downloads/

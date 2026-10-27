@@ -1,171 +1,278 @@
 package com.deltatorrent.screens;
 
-// Imports tools to define spacing and alignments.
+import com.deltatorrent.infra.FileLeecher;
+
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-// Imports components used to confirm download removal.
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
-// Imports visual components.
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-// Imports layouts to organize the interface.
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-// Class responsible for the Downloads tab interface.
+import java.util.IdentityHashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+
 public class DownloadsScreen extends VBox {
-
-    // Main container of the screen.
     private final VBox container;
-
-    // Stores the list so other methods can add downloads.
     private final VBox downloadsList;
+    private final Map<Node, DownloadCard> downloadCards =
+        new IdentityHashMap<>();
 
-    // Constructor executed when creating the screen.
     public DownloadsScreen() {
+        container = new VBox(20);
+        container.setPadding(new Insets(30));
+        container.setFillWidth(true);
 
-        // Creates the container with spacing between elements.
-        this.container = new VBox(20);
-
-        // Sets the internal padding of the screen.
-        this.container.setPadding(new Insets(30));
-
-        // Allows components to occupy the available width.
-        this.container.setFillWidth(true);
-
-        // ==================== HEADER ====================
-
-        // Creates the page title.
         Label title = new Label("Downloads");
-
-        // Applies the CSS class responsible for the appearance of the title.
         title.getStyleClass().add("downloads-screen-title");
 
-        // Creates the auxiliary text.
         Label subtitle = new Label(
             "Manage your downloads in one place."
         );
+        subtitle.getStyleClass().add(
+            "downloads-screen-subtitle"
+        );
 
-        //Applies the CSS class responsible for the subtitle color.
-        subtitle.getStyleClass().add("downloads-screen-subtitle");
-
-        // Groups the title and subtitle.
         VBox header = new VBox(6, title, subtitle);
 
-        // ==================== SEARCH ====================
-
-        // Field used to search downloads by name.
         TextField searchField = new TextField();
-
         searchField.setPromptText("Search downloads...");
         searchField.setPrefWidth(350);
 
-        // ==================== DOWNLOADS LIST ====================
-
-        // Initializes the list that will be shared by methods of this screen.
         downloadsList = new VBox(12);
-
-        // Allows the downloads list background to follow the selected theme.
         downloadsList.getStyleClass().add("downloads-list");
 
-        // Adds dummy cards to test functionalities.
-        this.downloadsList.getChildren().addAll(
-            createDownloadItem(
-                "Sample file 1",
-                "450 MB / 1 GB",
-                0.45,
-                "2.5 MB/s"
-            ),
-            createDownloadItem(
-                "Sample file 2",
-                "800 MB / 800 MB",
-                1.0,
-                "Completed"
-            ),
-            createDownloadItem(
-                "Sample file 3",
-                "0 MB / 2 GB",
-                0.0,
-                "Waiting"
-            )
+        ScrollPane scrollPane = new ScrollPane(downloadsList);
+        scrollPane.getStyleClass().add("downloads-scroll");
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(
+            ScrollPane.ScrollBarPolicy.NEVER
+        );
+        scrollPane.setVbarPolicy(
+            ScrollPane.ScrollBarPolicy.AS_NEEDED
         );
 
-        // Observes the typed text to filter the cards.
+        // Pesquisa por nome.
         searchField.textProperty().addListener(
             (observable, oldValue, newValue) -> {
+                String query = newValue == null
+                    ? ""
+                    : newValue.toLowerCase(Locale.ROOT).trim();
 
-                // Prepares the search text.
-                String query = newValue.toLowerCase().trim();
+                for (Node node : downloadsList.getChildren()) {
+                    Object data = node.getUserData();
 
-                // Iterates through all cards in the list.
-                this.downloadsList.getChildren().forEach(node -> {
-                    // Retrieves the name stored in each card.
-                    String name = node.getUserData().toString();
+                    String name = data == null
+                        ? ""
+                        : data.toString();
 
-                    // Checks if the name matches the search.
-                    boolean matches =
-                        name.toLowerCase().contains(query);
+                    boolean matches = name
+                        .toLowerCase(Locale.ROOT)
+                        .contains(query);
 
-                    // Shows or hides the card.
                     node.setVisible(matches);
-
-                    // Avoids reserving space for hidden cards.
                     node.setManaged(matches);
-                });
+                }
             }
         );
 
-        // ==================== SCREEN ASSEMBLY ====================
-        // Creates a scrollable area for the downloads list.
-        ScrollPane scrollPane = new ScrollPane(this.downloadsList);
-
-        // Allows the scroll area and its viewport to follow the selected theme.
-        scrollPane.getStyleClass().add("downloads-scroll");
-
-        // Allows vertical scrolling and takes up available width.
-        scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-
-        // Assembles the screen with the header, search bar, and scrollable list.
-        this.container.getChildren().addAll(
+        container.getChildren().addAll(
             header,
             searchField,
             scrollPane
         );
 
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
+        getChildren().add(container);
+        VBox.setVgrow(container, Priority.ALWAYS);
     }
 
-    // Creates a card that represents a download.
-    private VBox createDownloadItem(
+    public void startDownload(
         String name,
-        String size,
-        double progress,
-        String speed
+        long totalSize,
+        String ownerIP,
+        int ownerPort
     ) {
+        if (name == null || name.isBlank()
+                || totalSize < 0
+                || ownerIP == null || ownerIP.isBlank()
+                || ownerPort < 1 || ownerPort > 65535) {
 
-        // Creates the card and sets its internal spacing.
+            showError("Invalid download information.");
+            return;
+        }
+
+        // Evita downloads duplicados na lista.
+        for (Node node : downloadsList.getChildren()) {
+            if (node.getUserData() instanceof String existing
+                    && existing.equals(name)) {
+                showError(
+                    "This file is already in the downloads list."
+                );
+                return;
+            }
+        }
+
+        DownloadCard download = createDownloadCard(
+            name,
+            totalSize
+        );
+
+        downloadsList.getChildren().add(download.card);
+
+        // Arquivos vazios não precisam de conexão P2P.
+        if (totalSize == 0) {
+            download.progressBar.setProgress(1.0);
+            download.percentageLabel.setText("100%");
+            download.sizeLabel.setText("0 B / 0 B");
+            download.stateLabel.setText("Completed");
+            download.speedLabel.setText("Completed");
+
+            download.pauseButton.setDisable(true);
+            download.resumeButton.setDisable(true);
+            return;
+        }
+
+        download.stateLabel.setText("Connecting...");
+        download.speedLabel.setText("Connecting...");
+
+        download.pauseButton.setDisable(false);
+        download.resumeButton.setDisable(true);
+
+        download.task = FileLeecher.downloadFileP2P(
+            ownerIP,
+            ownerPort,
+            name,
+            totalSize,
+
+            // Callback de progresso.
+            progress -> Platform.runLater(() -> {
+                if (!isCardPresent(download.card)) {
+                    return;
+                }
+
+                double safeProgress = Math.max(
+                    0.0,
+                    Math.min(1.0, progress)
+                );
+
+                download.progressBar.setProgress(
+                    safeProgress
+                );
+
+                download.percentageLabel.setText(
+                    String.format(
+                        Locale.ROOT,
+                        "%.0f%%",
+                        safeProgress * 100
+                    )
+                );
+
+                long downloadedBytes = Math.min(
+                    totalSize,
+                    Math.round(totalSize * safeProgress)
+                );
+
+                download.sizeLabel.setText(
+                    formatFileSize(downloadedBytes)
+                    + " / "
+                    + formatFileSize(totalSize)
+                );
+            }),
+
+            // Callback de estado.
+            status -> Platform.runLater(() -> {
+                if (!isCardPresent(download.card)) {
+                    return;
+                }
+
+                download.stateLabel.setText(status);
+
+                switch (status) {
+                    case "Connecting..." -> {
+                        download.speedLabel.setText(
+                            "Connecting..."
+                        );
+                    }
+
+                    case "Downloading" -> {
+                        download.speedLabel.setText(
+                            "Downloading"
+                        );
+
+                        download.pauseButton.setDisable(false);
+                        download.resumeButton.setDisable(true);
+                    }
+
+                    case "Paused" -> {
+                        download.speedLabel.setText("Paused");
+
+                        download.pauseButton.setDisable(true);
+                        download.resumeButton.setDisable(false);
+                    }
+
+                    case "Completed" -> {
+                        download.progressBar.setProgress(1.0);
+                        download.percentageLabel.setText("100%");
+
+                        download.sizeLabel.setText(
+                            formatFileSize(totalSize)
+                            + " / "
+                            + formatFileSize(totalSize)
+                        );
+
+                        download.speedLabel.setText("Completed");
+
+                        download.pauseButton.setDisable(true);
+                        download.resumeButton.setDisable(true);
+                    }
+
+                    case "Cancelled" -> {
+                        download.speedLabel.setText("Cancelled");
+
+                        download.pauseButton.setDisable(true);
+                        download.resumeButton.setDisable(true);
+                    }
+
+                    default -> {
+                        if (status.startsWith("Error:")) {
+                            download.speedLabel.setText("Failed");
+
+                            download.pauseButton.setDisable(true);
+                            download.resumeButton.setDisable(true);
+                        } else {
+                            download.speedLabel.setText(status);
+                        }
+                    }
+                }
+            })
+        );
+    }
+
+    private DownloadCard createDownloadCard(
+        String name,
+        long totalSize
+    ) {
         VBox card = new VBox(10);
         card.setPadding(new Insets(16));
-
-        // Applies the CSS class so the card follows the selected theme.
         card.getStyleClass().add("download-card");
-
-        // Stores the name to allow searching.
         card.setUserData(name);
 
-        // ==================== NAME AND SPEED ====================
-
         Label nameLabel = new Label(name);
-        // Applies the CSS class responsible for highlighting the download name.
         nameLabel.getStyleClass().add("download-name");
 
-        Label speedLabel = new Label(speed);
+        Label speedLabel = new Label("Waiting");
 
         HBox topRow = new HBox(
             10,
@@ -174,25 +281,16 @@ public class DownloadsScreen extends VBox {
         );
 
         topRow.setAlignment(Pos.CENTER_LEFT);
-
-        // Makes the name occupy the free space of the row.
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
 
-        // ==================== PROGRESS ====================
-
-        // The bar receives a value between 0 and 1.
-        // For example, 0.45 represents 45%.
-        ProgressBar progressBar = new ProgressBar(progress);
-
+        ProgressBar progressBar = new ProgressBar(0);
         progressBar.setMaxWidth(Double.MAX_VALUE);
 
-        // ==================== INFORMATION ====================
-
-        Label sizeLabel = new Label(size);
-
-        Label percentageLabel = new Label(
-            String.format("%.0f%%", progress * 100)
+        Label sizeLabel = new Label(
+            "0 B / " + formatFileSize(totalSize)
         );
+
+        Label percentageLabel = new Label("0%");
 
         HBox infoRow = new HBox(
             10,
@@ -201,112 +299,108 @@ public class DownloadsScreen extends VBox {
         );
 
         infoRow.setAlignment(Pos.CENTER_LEFT);
-
-        // Pushes the percentage to the right side.
         HBox.setHgrow(sizeLabel, Priority.ALWAYS);
 
-        // ==================== BUTTONS ====================
+        Label stateLabel = new Label("Waiting");
 
         Button pauseButton = new Button("Pause");
         Button resumeButton = new Button("Resume");
         Button removeButton = new Button("Remove");
 
-        // Stores the current state of this download.
-        // The initial state is defined based on the received data.
-        String initialState;
+        pauseButton.setDisable(true);
+        resumeButton.setDisable(true);
 
-        if (progress >= 1.0) {
-            initialState = "Completed";
-        } else if (speed.equals("Waiting")) {
-            initialState = "Waiting";
-        } else {
-            initialState = "Downloading";
-        }
+        DownloadCard download = new DownloadCard(
+            card,
+            progressBar,
+            sizeLabel,
+            percentageLabel,
+            speedLabel,
+            stateLabel,
+            pauseButton,
+            resumeButton
+        );
 
-        // Uses a label to store and display the state.
-        Label stateLabel = new Label(initialState);
-
-        // Updates the buttons according to the download state.
-        Runnable updateButtons = () -> {
-        String state = stateLabel.getText();
-
-        pauseButton.setDisable(!state.equals("Downloading"));
-        resumeButton.setDisable(!state.equals("Paused"));
-        };
-        updateButtons.run();
-
-        // Pause button action.
+        // PAUSE
         pauseButton.setOnAction(event -> {
+            FileLeecher.DownloadTask task = download.task;
 
-            // Does not allow pausing a completed download.
-           if (!stateLabel.getText().equals("Downloading")) {
+            if (task == null
+                    || task.isCancelled()
+                    || task.isPaused()) {
                 return;
             }
 
-            // Updates the visual state to paused.
-            stateLabel.setText("Paused");
+            task.pause();
 
-            // Informs that the download is paused.
-            speedLabel.setText("Paused");
+            download.stateLabel.setText("Paused");
+            download.speedLabel.setText("Paused");
 
-            // Updates the buttons according to the new state.
-            updateButtons.run();
+            download.pauseButton.setDisable(true);
+            download.resumeButton.setDisable(false);
         });
 
-        // Resume button action.
+        // RESUME
         resumeButton.setOnAction(event -> {
+            FileLeecher.DownloadTask task = download.task;
 
-            if (!stateLabel.getText().equals("Paused")) {
-            return;
+            if (task == null
+                    || task.isCancelled()
+                    || !task.isPaused()) {
+                return;
             }
 
-            // Updates the visual state to downloading.
-            stateLabel.setText("Downloading");
+            task.resume();
 
-            // Uses a dummy speed for the test.
-            speedLabel.setText("2.5 MB/s");
+            download.stateLabel.setText("Downloading");
+            download.speedLabel.setText("Downloading");
 
-            // Updates the buttons according to the new state.
-            updateButtons.run();
+            download.pauseButton.setDisable(false);
+            download.resumeButton.setDisable(true);
         });
 
-            // Remove button action.
-             removeButton.setOnAction(event -> {
-
-            // Creates a confirmation dialog before removing the download.
-            Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
-
-            // Defines the dialog title and message.
-            confirmation.setTitle("Remove Download");
-            confirmation.setHeaderText("Remove this download?");
-             confirmation.setContentText(
-            "Are you sure you want to remove this download from the list?"
+        // REMOVE
+        removeButton.setOnAction(event -> {
+            Alert confirmation = new Alert(
+                Alert.AlertType.CONFIRMATION
             );
 
-            // Defines the confirmation and cancellation options.
-            ButtonType removeOption = new ButtonType("Remove");
-            ButtonType cancelOption = new ButtonType("Cancel");
+            confirmation.setTitle("Remove Download");
+            confirmation.setHeaderText(
+                "Remove this download?"
+            );
+            confirmation.setContentText(
+                "This cancels the transfer and removes "
+                + "the card. The downloaded file will "
+                + "remain on disk."
+            );
 
-           confirmation.getButtonTypes().setAll(removeOption, cancelOption);
+            ButtonType removeOption =
+                new ButtonType("Remove");
 
-            // Displays the dialog and waits for the user's choice.
-            confirmation.showAndWait().ifPresent(response -> {
+            ButtonType cancelOption =
+                new ButtonType("Cancel");
 
-            // Removes the card only when the user confirms.
-            if (response == removeOption) {
+            confirmation.getButtonTypes().setAll(
+                removeOption,
+                cancelOption
+            );
 
-                // Finds the container that holds this card.
-            if (card.getParent() instanceof VBox list) {
+            Optional<ButtonType> result =
+                confirmation.showAndWait();
 
-                // Removes the card from the list.
-                list.getChildren().remove(card);
+            if (result.isPresent()
+                    && result.get() == removeOption) {
+
+                if (download.task != null) {
+                    download.task.cancel();
+                }
+
+                downloadsList.getChildren().remove(card);
+                downloadCards.remove(card);
             }
-        }
-    });
-});
+        });
 
-
-        // Groups the buttons horizontally.
         HBox buttons = new HBox(
             8,
             pauseButton,
@@ -314,7 +408,6 @@ public class DownloadsScreen extends VBox {
             removeButton
         );
 
-        // Organizes the components inside the card.
         card.getChildren().addAll(
             topRow,
             progressBar,
@@ -323,26 +416,198 @@ public class DownloadsScreen extends VBox {
             buttons
         );
 
+        downloadCards.put(card, download);
+
+        return download;
+    }
+
+    public void addDownload(String name, String size) {
+        if (name == null || name.isBlank()) {
+            return;
+        }
+
+        for (Node node : downloadsList.getChildren()) {
+            if (node.getUserData() instanceof String existing
+                    && existing.equals(name)) {
+                return;
+            }
+        }
+
+        VBox card = createWaitingCard(name, size);
+        downloadsList.getChildren().add(card);
+    }
+
+    private VBox createWaitingCard(
+        String name,
+        String size
+    ) {
+        VBox card = new VBox(10);
+        card.setPadding(new Insets(16));
+        card.getStyleClass().add("download-card");
+        card.setUserData(name);
+
+        Label nameLabel = new Label(name);
+        nameLabel.getStyleClass().add("download-name");
+
+        Label speedLabel = new Label("Waiting");
+
+        HBox topRow = new HBox(
+            10,
+            nameLabel,
+            speedLabel
+        );
+
+        topRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(nameLabel, Priority.ALWAYS);
+
+        ProgressBar progressBar = new ProgressBar(0);
+        progressBar.setMaxWidth(Double.MAX_VALUE);
+
+        Label sizeLabel = new Label("0 B / " + size);
+        Label percentageLabel = new Label("0%");
+
+        HBox infoRow = new HBox(
+            10,
+            sizeLabel,
+            percentageLabel
+        );
+
+        HBox.setHgrow(sizeLabel, Priority.ALWAYS);
+
+        Label stateLabel = new Label("Waiting");
+
+        Button pauseButton = new Button("Pause");
+        Button resumeButton = new Button("Resume");
+        Button removeButton = new Button("Remove");
+
+        pauseButton.setDisable(true);
+        resumeButton.setDisable(true);
+
+        removeButton.setOnAction(event -> {
+            Alert confirmation = new Alert(
+                Alert.AlertType.CONFIRMATION
+            );
+
+            confirmation.setTitle("Remove Download");
+            confirmation.setHeaderText(
+                "Remove this download?"
+            );
+            confirmation.setContentText(
+                "Remove this item from the list?"
+            );
+
+            ButtonType removeOption =
+                new ButtonType("Remove");
+
+            ButtonType cancelOption =
+                new ButtonType("Cancel");
+
+            confirmation.getButtonTypes().setAll(
+                removeOption,
+                cancelOption
+            );
+
+            confirmation.showAndWait().ifPresent(response -> {
+                if (response == removeOption) {
+                    downloadsList.getChildren().remove(card);
+                }
+            });
+        });
+
+        card.getChildren().addAll(
+            topRow,
+            progressBar,
+            infoRow,
+            stateLabel,
+            new HBox(
+                8,
+                pauseButton,
+                resumeButton,
+                removeButton
+            )
+        );
+
         return card;
     }
 
-    // Adds a new download received from the search screen / external flow.
-    public void addDownload(String name, String size) {
-
-        // Creates a card with initial progress of zero.
-        VBox newDownload = createDownloadItem(
-            name,
-            "0 MB / " + size,
-            0.0,
-            "Waiting"
-        );
-
-        // Adds the new card to the downloads list.
-        this.downloadsList.getChildren().add(newDownload);
+    private boolean isCardPresent(Node card) {
+        return downloadsList.getChildren().contains(card);
     }
 
-    // Makes the container available to App.java.
+    private String formatFileSize(long bytes) {
+        if (bytes < 1024) {
+            return bytes + " B";
+        }
+
+        if (bytes < 1024L * 1024) {
+            return String.format(
+                Locale.ROOT,
+                "%.2f KB",
+                bytes / 1024.0
+            );
+        }
+
+        if (bytes < 1024L * 1024 * 1024) {
+            return String.format(
+                Locale.ROOT,
+                "%.2f MB",
+                bytes / (1024.0 * 1024.0)
+            );
+        }
+
+        return String.format(
+            Locale.ROOT,
+            "%.2f GB",
+            bytes / (1024.0 * 1024.0 * 1024.0)
+        );
+    }
+
+    private void showError(String message) {
+        Alert alert = new Alert(
+            Alert.AlertType.INFORMATION
+        );
+
+        alert.setTitle("Downloads");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.show();
+    }
+
     public VBox getControl() {
-        return this.container;
+        return this;
+    }
+
+    private static class DownloadCard {
+
+        private final VBox card;
+        private final ProgressBar progressBar;
+        private final Label sizeLabel;
+        private final Label percentageLabel;
+        private final Label speedLabel;
+        private final Label stateLabel;
+        private final Button pauseButton;
+        private final Button resumeButton;
+
+        private FileLeecher.DownloadTask task;
+
+        private DownloadCard(
+            VBox card,
+            ProgressBar progressBar,
+            Label sizeLabel,
+            Label percentageLabel,
+            Label speedLabel,
+            Label stateLabel,
+            Button pauseButton,
+            Button resumeButton
+        ) {
+            this.card = card;
+            this.progressBar = progressBar;
+            this.sizeLabel = sizeLabel;
+            this.percentageLabel = percentageLabel;
+            this.speedLabel = speedLabel;
+            this.stateLabel = stateLabel;
+            this.pauseButton = pauseButton;
+            this.resumeButton = resumeButton;
+        }
     }
 }
